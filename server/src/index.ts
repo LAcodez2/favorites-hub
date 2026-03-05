@@ -17,10 +17,14 @@ const clientOrigin = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
 
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
+    origin: process.env.CLIENT_ORIGIN,
     credentials: true,
   }),
 );
+
+app.get("/", (_req, res) => {
+  res.send("Favorites Hub API is running. Try /health");
+});
 
 app.get("/health", (_req: Request, res: Response) => {
   res.json({ status: "ok" });
