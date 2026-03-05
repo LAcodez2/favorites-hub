@@ -4,6 +4,8 @@ import { prisma } from "../prisma";
 import { registerSchema } from "../validators/auth";
 import { signToken } from "../validators/jwt";
 
+const isProd = process.env.NODE_ENV === "production";
+
 export async function register(req: Request, res: Response) {
   const parsed = registerSchema.safeParse(req.body);
 
@@ -49,9 +51,10 @@ export async function login(req: Request, res: Response) {
 
   res.cookie("token", token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
+    secure: isProd, // true on Render (https)
+    sameSite: isProd ? "none" : "lax", // cross-site cookies need "none"
     maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
   });
 
   return res.json({
@@ -71,6 +74,12 @@ export async function me(req: Request, res: Response) {
 }
 
 export async function logout(_req: Request, res: Response) {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+    path: "/",
+  });
+
   return res.status(204).send();
 }
