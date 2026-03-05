@@ -50,12 +50,11 @@ export async function login(req: Request, res: Response) {
   const token = signToken(user.id);
 
   res.cookie("token", token, {
-    httpOnly: true,
-    secure: isProd, // true on Render (https)
-    sameSite: isProd ? "none" : "lax", // cross-site cookies need "none"
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: "/",
-  });
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+});
 
   return res.json({
     user: { id: user.id, email: user.email, createdAt: user.createdAt },
