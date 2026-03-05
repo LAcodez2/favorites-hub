@@ -13,12 +13,11 @@ app.use(cookieParser());
 
 const isProd = process.env.NODE_ENV === "production";
 
-const clientOrigin =
-  process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
+const clientOrigin = process.env.CLIENT_ORIGIN ?? "http://localhost:5173";
 
 app.use(
   cors({
-    origin: clientOrigin,
+    origin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
     credentials: true,
   }),
 );
