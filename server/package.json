@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
-  },
+  "dev": "...",
+  "build": "prisma generate && tsc",
+  "start": "node dist/index.js"
+},
   "dependencies": {
     "@prisma/client": "^7.4.1",
     "bcrypt": "^6.0.0",
@@ -21,9 +21,11 @@
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.3.0",
+    "@types/pg": "^8.18.0",
     "nodemon": "^3.1.14",
     "prisma": "^7.4.1",
     "ts-node": "^10.9.2",
