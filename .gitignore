@@ -1,12 +1,25 @@
+# dependencies
 node_modules
-.env
-dist
-build
-coverage
-.DS_Store
-prisma/dev.db
-
-server/node_modules
 client/node_modules
-server/dist
+server/node_modules
+
+# builds
 client/dist
+server/dist
+
+# env
+.env
+client/.env
+server/.env
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+
+# prisma
+server/prisma/dev.db
+server/prisma/dev.db-journal
