@@ -2,27 +2,33 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import "./index.css";
+
 import App from "./App";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Favorites from "./pages/Favorites";
 
-import "./index.css";
+import { AuthProvider } from "./auth/AuthContext";
+import RequireAuth from "./auth/RequireAuth";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <Routes>
-        {/* App layout / home */}
-        <Route path="/" element={<App />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        {/* Auth pages */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+          {/* ✅ Protected routes */}
+          <Route element={<RequireAuth />}>
+            <Route path="/favorites" element={<Favorites />} />
+          </Route>
 
-        {/* Main feature */}
-        <Route path="/favorites" element={<Favorites />} />
-      </Routes>
-    </BrowserRouter>
-  </React.StrictMode>,
+          <Route path="*" element={<div style={{ padding: 24 }}>404</div>} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  </React.StrictMode>
 );

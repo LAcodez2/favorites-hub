@@ -12,6 +12,3 @@ export const updateFavoriteSchema = z
     url: z.string().url().optional(),
     notes: z.string().max(1000).optional(),
   })
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one field must be provided",
-  });

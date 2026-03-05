@@ -11,7 +11,7 @@ export const favoriteRoutes = Router();
 
 favoriteRoutes.use(requiredAuth);
 
-favoriteRoutes.post("/", createFavorite);
-favoriteRoutes.get("/", listFavorites);
-favoriteRoutes.post("/:id", updateFavorite);
-favoriteRoutes.post("/:id", deleteFavorite);
+favoriteRoutes.post("/", createFavorite);     // create
+favoriteRoutes.get("/", listFavorites);       // read
+favoriteRoutes.patch("/:id", updateFavorite); // update
+favoriteRoutes.delete("/:id", deleteFavorite); // delete

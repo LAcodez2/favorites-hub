@@ -1,22 +1,27 @@
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import FavoriteForm from "../components/FavoriteForm";
+import FavoriteList from "../components/FavoriteList";
 import { FavoritesAPI, type Favorite } from "../lib/favorites";
-import { Link } from "react-router-dom";
 
 export default function Favorites() {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
-  const [notes, setNotes] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // search + pagination
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
 
   async function load() {
     setLoading(true);
     setErr(null);
     try {
-      const data = await FavoritesAPI.list(1, 20, "");
+      const data = await FavoritesAPI.list(page, limit, search);
       setFavorites(data.favorites);
+      setTotalPages(data.totalPages);
     } catch (e: any) {
       setErr(e.message ?? "Failed to load favorites");
     } finally {
@@ -24,98 +29,95 @@ export default function Favorites() {
     }
   }
 
-  async function onAdd(e: React.FormEvent) {
-    e.preventDefault();
+  async function onCreate(data: { title: string; url?: string; notes?: string }) {
     setErr(null);
+    await FavoritesAPI.create(data);
+    setPage(1); // new item should show at top
+    // reload with page 1
+    const fresh = await FavoritesAPI.list(1, limit, search);
+    setFavorites(fresh.favorites);
+    setTotalPages(fresh.totalPages);
+  }
 
+  async function onDelete(id: string) {
+    setErr(null);
+    // optimistic
+    const prev = favorites;
+    setFavorites((xs) => xs.filter((f) => f.id !== id));
     try {
-      await FavoritesAPI.create({
-        title,
-        url: url || undefined,
-        notes: notes || undefined,
-      });
-
-      // reset form + reload list
-      setTitle("");
-      setUrl("");
-      setNotes("");
-      await load();
+      await FavoritesAPI.delete(id);
     } catch (e: any) {
-      setErr(e.message ?? "Failed to create favorite");
+      setFavorites(prev);
+      setErr(e.message ?? "Failed to delete favorite");
+    }
+  }
+
+  async function onUpdate(
+    id: string,
+    data: { title?: string; url?: string; notes?: string },
+  ) {
+    setErr(null);
+    try {
+      const res = await FavoritesAPI.update(id, data);
+      // update in place (no full reload)
+      setFavorites((xs) => xs.map((f) => (f.id === id ? res.favorite : f)));
+    } catch (e: any) {
+      setErr(e.message ?? "Failed to update favorite");
     }
   }
 
   useEffect(() => {
     load();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
   return (
-    <div style={{ padding: 24, maxWidth: 800, fontFamily: "system-ui" }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h1>Favorites</h1>
-        <Link to="/">Home</Link>
+    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto", fontFamily: "system-ui" }}>
+      <Navbar />
+
+      <h1>Favorites</h1>
+
+      <div style={{ display: "flex", gap: 8, margin: "12px 0" }}>
+        <input
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          placeholder="Search favorites..."
+          style={{ flex: 1, padding: 10 }}
+        />
+        <button onClick={() => load()} disabled={loading}>
+          Search
+        </button>
       </div>
 
-      <form onSubmit={onAdd} style={{ display: "grid", gap: 8 }}>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title (required)"
-          style={{ padding: 10 }}
-        />
-        <input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="URL (optional)"
-          style={{ padding: 10 }}
-        />
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notes (optional)"
-          style={{ padding: 10, minHeight: 80 }}
-        />
-        <button type="submit" disabled={!title || loading}>
-          Add Favorite
-        </button>
-      </form>
+      <FavoriteForm onCreate={onCreate} disabled={loading} />
 
       {err ? <p style={{ color: "crimson" }}>{err}</p> : null}
       {loading ? <p>Loading...</p> : null}
 
       <hr style={{ margin: "16px 0" }} />
 
-      <h2>Your Favorites</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2 style={{ margin: 0 }}>Your Favorites</h2>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <button disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>
+            Prev
+          </button>
+          <span>
+            Page {page} / {totalPages}
+          </span>
+          <button disabled={page >= totalPages || loading} onClick={() => setPage((p) => p + 1)}>
+            Next
+          </button>
+        </div>
+      </div>
 
       {favorites.length === 0 && !loading ? <p>No favorites yet.</p> : null}
 
-      <ul style={{ display: "grid", gap: 10, padding: 0, listStyle: "none" }}>
-        {favorites.map((f) => (
-          <li
-            key={f.id}
-            style={{
-              border: "1px solid #3333",
-              borderRadius: 10,
-              padding: 12,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <b>{f.title}</b>
-              <small>{new Date(f.createdAt).toLocaleString()}</small>
-            </div>
-
-            {f.url ? (
-              <div>
-                <a href={f.url} target="_blank" rel="noreferrer">
-                  {f.url}
-                </a>
-              </div>
-            ) : null}
-
-            {f.notes ? <p style={{ marginTop: 8 }}>{f.notes}</p> : null}
-          </li>
-        ))}
-      </ul>
+      <FavoriteList favorites={favorites} onDelete={onDelete} onUpdate={onUpdate} />
     </div>
   );
 }
